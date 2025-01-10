@@ -19,6 +19,10 @@ on:
         description: Path to the lifecycle policy JSON file (default = 'policy.json')
         default: "policy.json"
         type: string
+      ecr_repo_name:
+        description: Name of the ECR repository
+        default: "ecr-repo"
+        type: string
       github_iam_role:
         description: Name of the IAM Role for adding access to ECR repo
         default: "github-actions-role"
@@ -65,7 +69,8 @@ jobs:
           repo="${GITHUB_REPOSITORY,,}"
 
           # replace / with _
-          echo "ECR_REPO_NAME=${repo//\//_}" >> $GITHUB_ENV
+          # echo "ECR_REPO_NAME=${repo//\//_}" >> $GITHUB_ENV
+          echo "ECR_REPO_NAME=${{inputs.ecr_repo_name}}" >> $GITHUB_ENV
 
       - name: Login to Amazon ECR
         id: login-ecr
