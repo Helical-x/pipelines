@@ -28,7 +28,7 @@ on:
         default: "us-west-2"
         type: string
     secrets:
-        AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
 
 jobs:
   docker:
@@ -48,7 +48,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::${{ inputs.aws_account_id }}:role/github-role
+          role-to-assume: arn:aws:iam::${{ secrets.aws_account_id }}:role/github-role
           aws-region: ${{ inputs.aws_region }}
 
       - name: prepare ECR repo name based on the Github repository
@@ -65,7 +65,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
         with:
-          registries: ${{ inputs.aws_account_id }}
+          registries: ${{ secrets.aws_account_id }}
 
       - name: Build, tag, and push image to Amazon ECR
         id: build-publish
