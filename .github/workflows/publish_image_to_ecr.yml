@@ -3,10 +3,6 @@ name: Publish Container Image to ECR
 on:
   workflow_call:
     inputs:
-      environment:
-        description: 'Environment to deploy to'
-        required: true
-        type: string
       path_to_dockerfile:
         description: Path to the dockerfile (default = 'Dockerfile')
         default: "Dockerfile"
@@ -32,7 +28,8 @@ on:
         default: "us-west-2"
         type: string
     secrets:
-      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      AWS_ACCOUNT_ID:
+        required: true
 
 jobs:
   docker:
