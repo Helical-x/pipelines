@@ -27,6 +27,10 @@ on:
         description: Target AWS Region
         default: "us-west-2"
         type: string
+      environment:
+        description: Environment to deploy the image
+        default: "dev"
+        type: string
     secrets:
       AWS_ACCOUNT_ID:
         required: true
@@ -34,6 +38,7 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
 
     permissions:
       id-token: write
