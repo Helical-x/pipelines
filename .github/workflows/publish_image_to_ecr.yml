@@ -31,14 +31,19 @@ on:
         description: Target AWS Region
         default: "us-west-2"
         type: string
+      aws_access_key_id:
+        description: AWS Access Key ID
+        type: string
+        required: true
+      aws_secret_access_key:
+        description: AWS Secret Access Key
+        type: string
+        required: true
+
 
 jobs:
   docker:
     runs-on: ubuntu-latest
-
-    permissions:
-      id-token: write
-      contents: read
 
     outputs:
       image_tag: ${{ steps.build-publish.outputs.image_tag }}
@@ -50,8 +55,9 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::${{ inputs.aws_account_id }}:role/github-actions-rmodi
           aws-region: ${{ inputs.aws_region }}
+          aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
 
       - name: prepare ECR repo name based on the Github repository
         shell: bash
