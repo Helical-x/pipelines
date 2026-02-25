@@ -1,4 +1,4 @@
-name: DEPLOY .NET APP TO VM
+name: DEPLOY DOTNET APP TO VM
 
 on:
   workflow_call:
