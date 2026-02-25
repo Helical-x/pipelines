@@ -1,0 +1,76 @@
+name: DEPLOY .NET APP TO VM
+
+on:
+  workflow_call:
+    inputs:
+      project_path:
+        description: 'Project url'
+        required: true
+      destination_folder:
+        description: 'Folder path to upload binaries on server'
+        required: true
+      dotnet_version:
+        description: '.NET app version'
+        required: true
+        default: '10.0'
+      configuration:
+        description: 'Configuration for building app'
+        default: 'Release'
+
+    secrets:
+      SSH_HOST:
+        required: true
+      SSH_USER:
+        required: true
+      SSH_PRIVATE_KEY:
+        required: true
+
+jobs:
+  deploy-app:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore ${{ github.event.inputs.project_path }}
+
+      - name: Build solution
+        run: dotnet build ${{ github.event.inputs.project_path }} --configuration ${{ env.CONFIGURATION }} --no-restore
+
+      - name: Run tests
+        run: dotnet test --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
+
+      - name: Publish application
+        run: |
+            dotnet publish ${{ github.event.inputs.project_path }} \
+              --configuration ${{ env.CONFIGURATION }} \
+              --output ./publish \
+              --self-contained false \
+              --no-build
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add VM host to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          
+      - name: Create app directory on VM
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "sudo mkdir -p ${{ github.event.inputs.destination_folder }} && sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} ${{ github.event.inputs.destination_folder }}"
+
+      - name: Upload published app to VM
+        run: |
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
+            --delete \
+            ./publish/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ github.event.inputs.destination_folder }}/
