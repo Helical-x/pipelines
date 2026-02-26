@@ -4,19 +4,21 @@ on:
   workflow_call:
     inputs:
       project_path:
-        description: 'Project url'
+        description: 'Project path'
+        type: string
         required: true
       destination_folder:
         description: 'Folder path to upload binaries on server'
+        type: string
         required: true
       dotnet_version:
         description: '.NET app version'
-        required: true
+        type: string
         default: '10.0'
       configuration:
         description: 'Configuration for building app'
+        type: string
         default: 'Release'
-
     secrets:
       SSH_HOST:
         required: true
@@ -36,24 +38,23 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+          dotnet-version: ${{ inputs.dotnet_version }}
 
       - name: Restore dependencies
-        run: dotnet restore ${{ github.event.inputs.project_path }}
+        run: dotnet restore ${{ inputs.project_path }}
 
       - name: Build solution
-        run: dotnet build ${{ github.event.inputs.project_path }} --configuration ${{ env.CONFIGURATION }} --no-restore
+        run: dotnet build ${{ inputs.project_path }} --configuration ${{ inputs.configuration }} --no-restore
 
       - name: Run tests
-        run: dotnet test --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
+        run: dotnet test --configuration ${{ inputs.configuration }} --no-build --verbosity normal
 
       - name: Publish application
         run: |
-            dotnet publish ${{ github.event.inputs.project_path }} \
-              --configuration ${{ env.CONFIGURATION }} \
-              --output ./publish \
-              --self-contained false \
-              --no-build
+          dotnet publish ${{ inputs.project_path }} \
+            --configuration ${{ inputs.configuration }} \
+            --output ./publish \
+            --self-contained false
 
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.8.0
@@ -64,13 +65,15 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-          
+
       - name: Create app directory on VM
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "sudo mkdir -p ${{ github.event.inputs.destination_folder }} && sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} ${{ github.event.inputs.destination_folder }}"
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "sudo mkdir -p ${{ inputs.destination_folder }} && \
+             sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} ${{ inputs.destination_folder }}"
 
       - name: Upload published app to VM
         run: |
-          rsync -avz -e "ssh -o StrictHostKeyChecking=no" \
+          rsync -avz -e "ssh" \
             --delete \
-            ./publish/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ github.event.inputs.destination_folder }}/
+            ./publish/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ inputs.destination_folder }}/
