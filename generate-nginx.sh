@@ -164,12 +164,11 @@ fi
 
 # ── Enable Nginx site ─────────────────────────────────────
 echo "🔗 Enabling Nginx site..."
-sudo cp /tmp/"$DOMAIN".conf /etc/nginx/sites-available/$DOMAIN
+sudo cp /tmp/"$DOMAIN".conf /etc/nginx/sites-available/"$DOMAIN"
 sudo ln -sf /etc/nginx/sites-available/"$DOMAIN" \
   /etc/nginx/sites-enabled/"$DOMAIN"
 
-sudo nginx -t
-sudo systemctl reload nginx
+
 
 # ── Run Certbot ───────────────────────────────────────────
 DOMAINS="-d $DOMAIN"
@@ -189,5 +188,8 @@ else
   sudo certbot renew --nginx --non-interactive \
     --cert-name "$DOMAIN"
 fi
+
+sudo nginx -t
+sudo systemctl reload nginx
 
 echo -e "${GREEN}✅ Config written to: $OUTPUT${RESET}\n"
