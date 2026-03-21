@@ -2,6 +2,14 @@
 
 # ─────────────────────────────────────────────
 #  Nginx Config Generator
+#  Usage: ./generate-nginx.sh <domain> <port> <include_www> <enable_ssl> <email>
+#
+#  Arguments:
+#    $1  DOMAIN       e.g. example.com
+#    $2  PORT         backend port, e.g. 8000
+#    $3  INCLUDE_WWW  true | false
+#    $4  ENABLE_SSL   true | false
+#    $5  EMAIL        email for Let's Encrypt (required if ENABLE_SSL=true)
 # ─────────────────────────────────────────────
 
 set -e
@@ -10,25 +18,36 @@ BOLD="\033[1m"
 CYAN="\033[1;36m"
 GREEN="\033[1;32m"
 YELLOW="\033[1;33m"
+RED="\033[1;31m"
 RESET="\033[0m"
 
-echo -e "${CYAN}"
-echo "╔══════════════════════════════════════╗"
-echo "║     Nginx Config Generator           ║"
-echo "╚══════════════════════════════════════╝"
-echo -e "${RESET}"
+# ── Validate args ─────────────────────────────
 
-DOMAIN=$1
-PORT=$2
-INCLUDE_WWW=$3
-ENABLE_SSL=$4
-EMAIL=$5
+if [[ $# -lt 4 ]]; then
+  echo -e "${RED}❌ Usage: $0 <domain> <port> <include_www> <enable_ssl> [email]${RESET}"
+  echo -e "   Example: $0 example.com 8000 true true admin@example.com"
+  exit 1
+fi
 
-OUTPUT="$DOMAIN".conf
+DOMAIN="$1"
+PORT="${2:-8000}"
+INCLUDE_WWW="${3:-true}"
+ENABLE_SSL="${4:-true}"
+EMAIL="${5:-}"
 
-# ── Build server_name ─────────────────────────
+if [[ -z "$DOMAIN" ]]; then
+  echo -e "${RED}❌ Domain is required.${RESET}" && exit 1
+fi
 
-if [[ "${INCLUDE_WWW^^}" == "Y" ]]; then
+if [[ "${ENABLE_SSL,,}" == "true" && -z "$EMAIL" ]]; then
+  echo -e "${RED}❌ Email is required when SSL is enabled.${RESET}" && exit 1
+fi
+
+# ── Derived values ────────────────────────────
+
+OUTPUT="/tmp/$DOMAIN.conf"
+
+if [[ "${INCLUDE_WWW,,}" == "true" ]]; then
   SERVER_NAME="$DOMAIN www.$DOMAIN"
 else
   SERVER_NAME="$DOMAIN"
@@ -36,11 +55,20 @@ fi
 
 # ── Generate config ───────────────────────────
 
-echo -e "\n${YELLOW}⚙ Generating $OUTPUT...${RESET}\n"
+echo -e "${CYAN}"
+echo "╔══════════════════════════════════════╗"
+echo "║     Nginx Config Generator           ║"
+echo "╚══════════════════════════════════════╝"
+echo -e "${RESET}"
+echo -e "${YELLOW}⚙  Domain     : $DOMAIN${RESET}"
+echo -e "${YELLOW}⚙  Port       : $PORT${RESET}"
+echo -e "${YELLOW}⚙  www        : $INCLUDE_WWW${RESET}"
+echo -e "${YELLOW}⚙  SSL        : $ENABLE_SSL${RESET}"
+echo -e "${YELLOW}⚙  Output     : $OUTPUT${RESET}\n"
 
-if [[ "${ENABLE_SSL^^}" == "Y" ]]; then
+if [[ "${ENABLE_SSL,,}" == "true" ]]; then
 
-  cat >"$OUTPUT" <<NGINX
+cat > "$OUTPUT" << NGINX
 server {
     listen 80;
     server_name $SERVER_NAME;
@@ -102,7 +130,7 @@ NGINX
 
 else
 
-  cat >"$OUTPUT" <<NGINX
+cat > "$OUTPUT" << NGINX
 server {
     listen 80;
     server_name $SERVER_NAME;
@@ -136,36 +164,6 @@ NGINX
 
 fi
 
-# ── Enable Nginx site ─────────────────────────────────────
-echo "🔗 Enabling Nginx site..."
-sudo cp /tmp/"$DOMAIN".conf /etc/nginx/sites-available/$DOMAIN
-sudo ln -sf /etc/nginx/sites-available/"$DOMAIN" \
-  /etc/nginx/sites-enabled/"$DOMAIN"
+# ── Done ──────────────────────────────────────
 
-sudo nginx -t
-sudo systemctl reload nginx
-
-# ── Run Certbot ───────────────────────────────────────────
-DOMAINS="-d $DOMAIN"
-if [ "$INCLUDE_WWW" = "true" ]; then
-  DOMAINS="$DOMAINS -d www.$DOMAIN"
-fi
-
-if [ ! -d "/etc/letsencrypt/live/$DOMAIN" ]; then
-  echo "🔐 Issuing new certificate for $DOMAIN..."
-  sudo certbot --nginx \
-    --non-interactive \
-    --agree-tos \
-    --email "$EMAIL" \
-    "$DOMAINS"
-else
-  echo "🔄 Renewing existing certificate for $DOMAIN..."
-  sudo certbot renew --nginx --non-interactive \
-    --cert-name "$DOMAIN"
-fi
-
-echo "🔁 Reloading Nginx with SSL..."
-sudo nginx -t
-sudo systemctl reload nginx
-
-echo "✅ Done — $DOMAIN is live with SSL"
+echo -e "${GREEN}✅ Config written to: $OUTPUT${RESET}\n"
