@@ -1,0 +1,67 @@
+name: Certbot SSL
+
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: "Primary domain (e.g. yourdomain.com)"
+        required: true
+        type: string
+      www:
+        description: "Also include www subdomain?"
+        required: true
+        type: boolean
+        default: false
+      email:
+        description: "Email for Let's Encrypt notifications"
+        required: true
+        type: string
+      backend_port:
+        description: "Backend app port (default: 8000)"
+        required: false
+        default: "8000"
+        type: string
+
+jobs:
+  certbot:
+    name: Generate Nginx Config & Issue SSL Certificate
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repo so generate-nginx.sh is available
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Upload generate-nginx.sh to the server
+      - name: Upload generate-nginx.sh
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host:     ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key:      ${{ secrets.SSH_PRIVATE_KEY }}
+          port:     ${{ secrets.SSH_PORT || 22 }}
+          source:   "generate-nginx.sh"
+          target:   "/tmp/"
+
+      # 3. Run the script non-interactively, then issue SSL cert
+      - name: Run script & configure Certbot
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host:     ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key:      ${{ secrets.SSH_PRIVATE_KEY }}
+          port:     ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+
+            DOMAIN="${{ github.event.inputs.domain }}"
+            EMAIL="${{ github.event.inputs.email }}"
+            INCLUDE_WWW="${{ github.event.inputs.www }}"
+            PORT="${{ github.event.inputs.backend_port }}"
+
+            # ── Run generate-nginx.sh non-interactively ───────────────
+            echo "📝 Generating Nginx config for $DOMAIN..."
+            chmod +x /tmp/generate-nginx.sh
+
+            # Feed answers to the interactive prompts via heredoc
+            /tmp/generate-nginx.sh
