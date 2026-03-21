@@ -164,6 +164,32 @@ NGINX
 
 fi
 
-# ── Done ──────────────────────────────────────
+# ── Enable Nginx site ─────────────────────────────────────
+echo "🔗 Enabling Nginx site..."
+sudo cp /tmp/"$DOMAIN".conf /etc/nginx/sites-available/$DOMAIN
+sudo ln -sf /etc/nginx/sites-available/"$DOMAIN" \
+  /etc/nginx/sites-enabled/"$DOMAIN"
+
+sudo nginx -t
+sudo systemctl reload nginx
+
+# ── Run Certbot ───────────────────────────────────────────
+DOMAINS="-d $DOMAIN"
+if [ "$INCLUDE_WWW" = "true" ]; then
+  DOMAINS="$DOMAINS -d www.$DOMAIN"
+fi
+
+if [ ! -d "/etc/letsencrypt/live/$DOMAIN" ]; then
+  echo "🔐 Issuing new certificate for $DOMAIN..."
+  sudo certbot --nginx \
+    --non-interactive \
+    --agree-tos \
+    --email "$EMAIL" \
+    "$DOMAINS"
+else
+  echo "🔄 Renewing existing certificate for $DOMAIN..."
+  sudo certbot renew --nginx --non-interactive \
+    --cert-name "$DOMAIN"
+fi
 
 echo -e "${GREEN}✅ Config written to: $OUTPUT${RESET}\n"
