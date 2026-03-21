@@ -70,4 +70,4 @@ jobs:
             chmod +x /tmp/generate-nginx.sh
 
             # Feed answers to the interactive prompts via heredoc
-            /tmp/generate-nginx.sh
+            /tmp/generate-nginx.sh "$DOMAIN" "$PORT" "$INCLUDE_WWW" "$EMAIL"
