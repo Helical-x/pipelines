@@ -1,7 +1,7 @@
 name: Certbot SSL
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       domain:
         description: "Primary domain (e.g. yourdomain.com)"
