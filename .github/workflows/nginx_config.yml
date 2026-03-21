@@ -52,8 +52,6 @@ jobs:
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts   
 
       - name: Run script & configure Certbot
-        env:
-          DOMAIN
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
             "sudo wget -O /tmp/generate-nginx.sh $NGINX_URL && \
