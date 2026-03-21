@@ -18,24 +18,6 @@ echo "║     Nginx Config Generator           ║"
 echo "╚══════════════════════════════════════╝"
 echo -e "${RESET}"
 
-# ── Inputs ────────────────────────────────────
-
-read -p "$(echo -e ${BOLD})Domain (e.g. example.com): $(echo -e ${RESET})" DOMAIN
-if [[ -z "$DOMAIN" ]]; then
-  echo "❌ Domain is required." && exit 1
-fi
-
-read -p "$(echo -e ${BOLD})Include www.$DOMAIN? [Y/n]: $(echo -e ${RESET})" INCLUDE_WWW
-INCLUDE_WWW="${INCLUDE_WWW:-Y}"
-
-read -p "$(echo -e ${BOLD})Backend port (default: 8000): $(echo -e ${RESET})" PORT
-PORT="${PORT:-8000}"
-
-read -p "$(echo -e ${BOLD})Enable SSL (Let's Encrypt)? [Y/n]: $(echo -e ${RESET})" ENABLE_SSL
-ENABLE_SSL="${ENABLE_SSL:-Y}"
-
-read -p "$(echo -e ${BOLD})Output file (default: $DOMAIN.conf): $(echo -e ${RESET})" OUTPUT
-OUTPUT="${OUTPUT:-$DOMAIN.conf}"
 
 # ── Build server_name ─────────────────────────
 
