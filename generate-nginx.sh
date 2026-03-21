@@ -164,7 +164,7 @@ fi
 
 # ── Enable Nginx site ─────────────────────────────────────
 echo "🔗 Enabling Nginx site..."
-sudo cp /tmp/"$DOMAIN".conf /etc/nginx/sites-available/"$DOMAIN"
+sudo cp -f /tmp/"$DOMAIN".conf /etc/nginx/sites-available/"$DOMAIN"
 sudo ln -sf /etc/nginx/sites-available/"$DOMAIN" \
   /etc/nginx/sites-enabled/"$DOMAIN"
 
