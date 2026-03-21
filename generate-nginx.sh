@@ -8,8 +8,7 @@
 #    $1  DOMAIN       e.g. example.com
 #    $2  PORT         backend port, e.g. 8000
 #    $3  INCLUDE_WWW  true | false
-#    $4  ENABLE_SSL   true | false
-#    $5  EMAIL        email for Let's Encrypt (required if ENABLE_SSL=true)
+#    $4  EMAIL        email for Let's Encrypt (required if ENABLE_SSL=true)
 # ─────────────────────────────────────────────
 
 set -e
@@ -32,8 +31,9 @@ fi
 DOMAIN="$1"
 PORT="${2:-8000}"
 INCLUDE_WWW="${3:-true}"
-ENABLE_SSL="${4:-true}"
-EMAIL="${5:-}"
+EMAIL="${4:-}"
+
+ENABLE_SSL="true"
 
 if [[ -z "$DOMAIN" ]]; then
   echo -e "${RED}❌ Domain is required.${RESET}" && exit 1

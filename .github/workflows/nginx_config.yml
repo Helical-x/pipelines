@@ -30,6 +30,12 @@ jobs:
   certbot:
     name: Generate Nginx Config & Issue SSL Certificate
     runs-on: ubuntu-latest
+    env:
+      DOMAIN: ${{ github.event.inputs.domain }}
+      WWW: ${{ github.event.inputs.www }}
+      EMAIL: ${{ github.event.inputs.email }}
+      PORT: ${{ github.event.inputs.backend_port }}
+      NGINX_URL: ${{ github.event.inputs.nginx_generator_link }}
 
     steps:
       - name: Checkout code
@@ -46,29 +52,10 @@ jobs:
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts   
 
       - name: Run script & configure Certbot
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          script: |
-            set -e
-
-            DOMAIN="${{ github.event.inputs.domain }}"
-            EMAIL="${{ github.event.inputs.email }}"
-            INCLUDE_WWW="${{ github.event.inputs.www }}"
-            PORT="${{ github.event.inputs.backend_port }}"
-            ENABLE_SSL="Y"
-            
-            # ── Download generate-nginx.sh ────────────────────────────
-            echo "📥 Downloading Nginx config generator..."
-            wget -O /tmp/generate-nginx.sh "${{ inputs.nginx_generator_link }}"
-            chmod +x /tmp/generate-nginx.sh
-
-            # ── Run generate-nginx.sh non-interactively ───────────────
-            echo "📝 Generating Nginx config for $DOMAIN..."
-            chmod +x /tmp/generate-nginx.sh
-
-            # Feed answers to the interactive prompts via heredoc
-            /tmp/generate-nginx.sh "$DOMAIN" "$PORT" "$INCLUDE_WWW" "$ENABLE_SSL" "$EMAIL"
+        env:
+          DOMAIN
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "sudo wget -O /tmp/generate-nginx.sh $NGINX_URL && \
+             sudo chmod +x /tmp/generate-nginx.sh && \
+             sudo /tmp/generate-nginx.sh $DOMAIN $PORT $WWW $EMAIL"
