@@ -59,10 +59,11 @@ jobs:
             EMAIL="${{ github.event.inputs.email }}"
             INCLUDE_WWW="${{ github.event.inputs.www }}"
             PORT="${{ github.event.inputs.backend_port }}"
-            NGINX_URL="${{ github.event.inputs.nginx_generator_link }}"
             
-            # Download generator file
-            wget -O /tmp/generate-nginx.sh $NGINX_URL
+            # ── Download generate-nginx.sh ────────────────────────────
+            echo "📥 Downloading Nginx config generator..."
+            wget -O /tmp/generate-nginx.sh "${{ inputs.nginx_generator_link }}"
+            chmod +x /tmp/generate-nginx.sh
 
             # ── Run generate-nginx.sh non-interactively ───────────────
             echo "📝 Generating Nginx config for $DOMAIN..."
