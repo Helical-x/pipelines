@@ -61,7 +61,7 @@ jobs:
             PORT="${{ github.event.inputs.backend_port }}"
             
             # Download generator file
-            wget -O /tmp/generate-nginx.sh ${{ github.event.inputs.nginx_generator_link }}
+            wget -O /tmp/generate-nginx.sh "${{ github.event.inputs.nginx_generator_link }}"
 
             # ── Run generate-nginx.sh non-interactively ───────────────
             echo "📝 Generating Nginx config for $DOMAIN..."
