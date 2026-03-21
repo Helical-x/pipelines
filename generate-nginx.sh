@@ -176,6 +176,8 @@ if [ "$INCLUDE_WWW" = "true" ]; then
   DOMAINS="$DOMAINS -d www.$DOMAIN"
 fi
 
+command -v cerbot &>/dev/null || (sudo apt-get update -qq && sudo apt-get install -y certbot python3-certbot-nginx)
+
 if [ ! -d "/etc/letsencrypt/live/$DOMAIN" ]; then
   echo "🔐 Issuing new certificate for $DOMAIN..."
   sudo certbot --nginx \
