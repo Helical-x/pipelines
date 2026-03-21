@@ -59,6 +59,7 @@ jobs:
             EMAIL="${{ github.event.inputs.email }}"
             INCLUDE_WWW="${{ github.event.inputs.www }}"
             PORT="${{ github.event.inputs.backend_port }}"
+            ENABLE_SSL="Y"
             
             # ── Download generate-nginx.sh ────────────────────────────
             echo "📥 Downloading Nginx config generator..."
@@ -70,4 +71,4 @@ jobs:
             chmod +x /tmp/generate-nginx.sh
 
             # Feed answers to the interactive prompts via heredoc
-            /tmp/generate-nginx.sh "$DOMAIN" "$PORT" "$INCLUDE_WWW" "$EMAIL"
+            /tmp/generate-nginx.sh "$DOMAIN" "$PORT" "$INCLUDE_WWW" "$ENABLE_SSL" "$EMAIL"

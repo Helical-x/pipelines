@@ -21,7 +21,8 @@ echo -e "${RESET}"
 DOMAIN=$1
 PORT=$2
 INCLUDE_WWW=$3
-EMAIL=$4
+ENABLE_SSL=$4
+EMAIL=$5
 
 # ── Build server_name ─────────────────────────
 
