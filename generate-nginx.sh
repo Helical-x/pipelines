@@ -33,7 +33,7 @@ PORT="${2:-8000}"
 INCLUDE_WWW="${3:-true}"
 EMAIL="${4:-}"
 
-ENABLE_SSL="true"
+ENABLE_SSL="false"
 
 if [[ -z "$DOMAIN" ]]; then
   echo -e "${RED}❌ Domain is required.${RESET}" && exit 1
