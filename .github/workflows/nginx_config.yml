@@ -32,16 +32,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Upload generate-nginx.sh to the server
+      # 2. Upload generate-nginx.sh to the server via rsync
       - name: Upload generate-nginx.sh
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host:     ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key:      ${{ secrets.SSH_PRIVATE_KEY }}
-          port:     ${{ secrets.SSH_PORT || 22 }}
-          source:   "generate-nginx.sh"
-          target:   "/tmp/"
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          echo "$SSH_PRIVATE_KEY" > /tmp/deploy_key
+          chmod 600 /tmp/deploy_key
+          rsync -az \
+            -e "ssh -i /tmp/deploy_key -p ${{ secrets.SSH_PORT || 22 }} -o StrictHostKeyChecking=no" \
+            generate-nginx.sh \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/
+          rm -f /tmp/deploy_key
 
       # 3. Run the script non-interactively, then issue SSL cert
       - name: Run script & configure Certbot
