@@ -24,7 +24,7 @@ INCLUDE_WWW=$3
 ENABLE_SSL=$4
 EMAIL=$5
 
-OUTPUT="${OUTPUT:-$DOMAIN.conf}"
+OUTPUT="$DOMAIN".conf
 
 # ── Build server_name ─────────────────────────
 
