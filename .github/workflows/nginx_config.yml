@@ -21,6 +21,10 @@ on:
         required: false
         default: "8000"
         type: string
+      nginx_generator_link:
+        description: "File link to nginx generator"
+        required: true
+        type: string
 
 jobs:
   certbot:
@@ -41,19 +45,6 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts   
 
-      - name: Upload generate-nginx.sh
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: |
-          CURRENT_PATH=$(pwd)
-          echo "$SSH_PRIVATE_KEY" > /tmp/deploy_key
-          chmod 600 /tmp/deploy_key
-          rsync -az \
-            -e "ssh -i /tmp/deploy_key -p ${{ secrets.SSH_PORT || 22 }} -o StrictHostKeyChecking=no" \
-            $CURRENT_PATH/generate-nginx.sh \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/
-          rm -f /tmp/deploy_key
-
       - name: Run script & configure Certbot
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -68,6 +59,9 @@ jobs:
             EMAIL="${{ github.event.inputs.email }}"
             INCLUDE_WWW="${{ github.event.inputs.www }}"
             PORT="${{ github.event.inputs.backend_port }}"
+            
+            # Download generator file
+            wget -O /tmp/generate-nginx.sh ${{ github.event.nginx_generator_link }}
 
             # ── Run generate-nginx.sh non-interactively ───────────────
             echo "📝 Generating Nginx config for $DOMAIN..."
