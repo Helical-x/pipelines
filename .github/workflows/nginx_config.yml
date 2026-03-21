@@ -54,6 +54,4 @@ jobs:
       - name: Run script & configure Certbot
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "sudo wget -O /tmp/generate-nginx.sh '$NGINX_URL' && \
-             sudo chmod +x /tmp/generate-nginx.sh && \
-             sudo /tmp/generate-nginx.sh '$DOMAIN' '$PORT' '$WWW' '$EMAIL'"
+            "sudo wget -qO- '$NGINX_URL' | sudo bash -s -- '$DOMAIN' '$PORT' '$WWW' '$EMAIL'"
