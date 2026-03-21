@@ -45,11 +45,12 @@ jobs:
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
+          CURRENT_PATH=$(pwd)
           echo "$SSH_PRIVATE_KEY" > /tmp/deploy_key
           chmod 600 /tmp/deploy_key
           rsync -az \
             -e "ssh -i /tmp/deploy_key -p ${{ secrets.SSH_PORT || 22 }} -o StrictHostKeyChecking=no" \
-            ${{ github.workspace }}/generate-nginx.sh \
+            $CURRENT_PATH/generate-nginx.sh \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/
           rm -f /tmp/deploy_key
 
