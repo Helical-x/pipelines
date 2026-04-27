@@ -103,6 +103,8 @@ server {
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
 
+    client_max_body_size 100M;
+
     # Proxy to backend on port $PORT
     location / {
         proxy_pass         http://127.0.0.1:$PORT;
